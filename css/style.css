@@ -22,7 +22,26 @@ nav{display:flex;align-items:center;gap:25px}nav a{font-size:13px;font-weight:80
 @media(max-width:850px){.menu{display:block}nav{display:none;position:absolute;top:82px;left:0;right:0;background:#fff;padding:20px 4%;flex-direction:column;align-items:flex-start;border-bottom:1px solid var(--line)}nav.open{display:flex}.hero-grid,.split,.form-grid,.structure-grid{grid-template-columns:1fr;gap:38px}.hero{min-height:auto;padding:90px 0}.hero-card{max-width:560px}.domain-grid{grid-template-columns:1fr 1fr}.process-grid{grid-template-columns:1fr 1fr}.section{padding:75px 0}.opportunity{align-items:flex-start;flex-direction:column}}
 @media(max-width:560px){.domain-grid,.process-grid,.partner-list{grid-template-columns:1fr}.actions{flex-direction:column}.btn{text-align:center}.hero h1{font-size:50px}.footer{padding:28px 0;flex-direction:column;align-items:flex-start}}
 
-.team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}.member{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}.member img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:top;display:block;background:var(--soft)}.member div{padding:16px 18px 20px}.member h3{margin:0 0 4px;font-size:17px;color:var(--navy);line-height:1.3}.member small{display:block;color:var(--cyan);font-weight:800;font-size:12px;letter-spacing:.02em;line-height:1.4}.member p{margin:10px 0 0;font-size:14px;color:var(--muted)}
-@media(max-width:850px){.team-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:560px){.team-grid{gap:12px}.member div{padding:12px 12px 14px}.member h3{font-size:14px}.member small{font-size:11px}.member p{font-size:12.5px}}
 section[id]{scroll-margin-top:82px}
+.org{background:linear-gradient(180deg,#fff 0%,var(--soft) 100%)}
+.org-chart{display:flex;flex-direction:column;align-items:center}
+.org-level{display:flex;justify-content:center;flex-wrap:wrap;gap:20px;width:100%;position:relative}
+.org-level+.org-label,.org-label+.org-level{position:relative}
+.org-label{position:relative;margin:34px 0 22px;padding:7px 16px;border-radius:30px;background:var(--navy);color:#fff;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center}
+.org-label:before,.org-label:after{content:"";position:absolute;left:50%;width:2px;height:34px;background:linear-gradient(var(--cyan),var(--blue));transform:translateX(-50%)}
+.org-label:before{bottom:100%}.org-label:after{top:100%;height:22px}
+.org-card{width:200px;background:#fff;border:1px solid var(--line);border-radius:14px;text-align:center;padding:18px 14px 18px;box-shadow:0 8px 24px rgba(6,59,112,.07);transition:transform .2s,box-shadow .2s}
+.org-card:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(6,59,112,.13)}
+.org-card .ph{width:118px;height:118px;margin:0 auto 12px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 35%,#eaf6fc 0%,#cfe9f6 100%);border:3px solid #fff;box-shadow:0 0 0 2px var(--cyan)}
+.org-card .ph img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;display:block}
+.org-card .initials{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy),var(--cyan))}
+.org-card .initials span{color:#fff;font-size:34px;font-weight:900;letter-spacing:.04em}
+.org-card h3{margin:0 0 3px;font-size:15.5px;line-height:1.3;color:var(--navy)}
+.org-card small{display:block;color:var(--cyan);font-weight:800;font-size:11.5px;line-height:1.35}
+.org-card p{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.org-card.lead{width:280px;border:0;background:linear-gradient(135deg,var(--navy),var(--blue));padding:24px 20px}
+.org-card.lead .ph{width:150px;height:150px}
+.org-card.lead h3{color:#fff;font-size:19px}.org-card.lead small{color:var(--cyan2);font-size:13px}.org-card.lead p{color:#d6e6f2}
+.org-card.bizdev{width:320px;border:2px solid var(--cyan)}
+.org-card.bizdev .ph{width:130px;height:130px}
+@media(max-width:560px){.org-level{gap:12px}.org-card{width:calc(50% - 6px);padding:14px 8px}.org-card .ph{width:88px;height:88px}.org-card h3{font-size:13.5px}.org-card small{font-size:10.5px}.org-card p{font-size:11.5px}.org-card.lead,.org-card.bizdev{width:100%;max-width:320px}.org-card.lead .ph,.org-card.bizdev .ph{width:120px;height:120px}}
