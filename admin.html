@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Espace admin — BIGBLU AFRICA</title>
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div id="login" class="login" hidden>
+  <form class="login-card" id="loginForm">
+    <img src="/assets/bigblu-logo.jpg" alt="BIGBLU AFRICA">
+    <h1>Espace admin</h1>
+    <p>Réservé au personnel de BIGBLU AFRICA.</p>
+    <label>Email<input type="email" name="email" required autocomplete="username"></label>
+    <label>Mot de passe<input type="password" name="password" required autocomplete="current-password"></label>
+    <button class="btn primary" type="submit">Se connecter</button>
+    <button class="linkbtn" type="button" id="forgot">Mot de passe oublié ?</button>
+    <p class="msg" id="loginMsg"></p>
+  </form>
+</div>
+
+<div id="app" class="app" hidden>
+  <aside class="side">
+    <div class="side-brand">BIGBLU <span>ADMIN</span></div>
+    <nav class="tabs">
+      <button data-tab="dash" class="on">📊 Tableau de bord</button>
+      <button data-tab="ins">🧾 Inscriptions <b id="badgeNew"></b></button>
+      <button data-tab="msg">✉️ Messages <b id="badgeMsg"></b></button>
+      <button data-tab="team" class="admin-only">👥 Équipe</button>
+    </nav>
+    <div class="me"><span id="meName"></span><small id="meRole"></small><button class="linkbtn" id="logout">Se déconnecter</button></div>
+  </aside>
+
+  <main class="main">
+    <!-- TABLEAU DE BORD -->
+    <section data-view="dash">
+      <div class="head"><h1>Tableau de bord</h1>
+        <select id="period"><option value="7">7 derniers jours</option><option value="30" selected>30 derniers jours</option><option value="90">90 derniers jours</option><option value="0">Depuis le début</option></select></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="grid2">
+        <div class="card"><h2>📞 À appeler aujourd'hui <small id="todayLbl"></small></h2><div id="callToday" class="mini-list"></div></div>
+        <div class="card"><h2>📍 Passages au bureau</h2>
+          <div class="seg"><button data-wk="0" class="on">Cette semaine</button><button data-wk="1">Semaine prochaine</button></div>
+          <div id="office" class="mini-list"></div></div>
+      </div>
+      <div class="card"><h2>📈 Inscriptions par jour</h2><div id="chartDays" class="bars"></div></div>
+      <div class="grid2">
+        <div class="card"><h2>🔻 Entonnoir de suivi</h2><div id="funnel"></div></div>
+        <div class="card"><h2>🧭 Profil des inscrits</h2><div id="profile"></div></div>
+      </div>
+    </section>
+
+    <!-- INSCRIPTIONS -->
+    <section data-view="ins" hidden>
+      <div class="head"><h1>Inscriptions</h1><button class="btn admin-only" id="export">⬇️ Export Excel</button></div>
+      <div class="filters">
+        <input id="q" placeholder="Rechercher un nom, un téléphone…">
+        <select id="fProg"><option value="">Tous les programmes</option><option value="travail">Travail</option><option value="football">Football</option></select>
+        <select id="fStat"><option value="">Tous les statuts</option></select>
+        <label class="chk"><input type="checkbox" id="fToday"> À appeler aujourd'hui</label>
+      </div>
+      <div class="count" id="insCount"></div>
+      <div class="list" id="insList"></div>
+    </section>
+
+    <!-- MESSAGES -->
+    <section data-view="msg" hidden>
+      <div class="head"><h1>Messages & projets</h1></div>
+      <div class="list" id="msgList"></div>
+    </section>
+
+    <!-- EQUIPE -->
+    <section data-view="team" hidden>
+      <div class="head"><h1>Équipe</h1></div>
+      <div class="card"><h2>Ajouter un membre du personnel</h2>
+        <form id="teamForm" class="team-form">
+          <input name="nom" required placeholder="Nom complet">
+          <input name="email" type="email" required placeholder="Email">
+          <input name="password" type="text" required minlength="8" placeholder="Mot de passe provisoire (8 caractères min.)">
+          <select name="role"><option value="service_client">Service client</option><option value="admin">Admin général</option></select>
+          <button class="btn primary" type="submit">Créer le compte</button>
+        </form><p class="msg" id="teamMsg"></p></div>
+      <div class="list" id="teamList"></div>
+    </section>
+  </main>
+</div>
+
+<div class="drawer" id="drawer" hidden><div class="drawer-bg" data-close></div><div class="drawer-panel" id="drawerPanel"></div></div>
+<div id="boot" class="boot">Chargement…</div>
+<script type="module" src="/js/admin.js"></script>
+</body>
+</html>
