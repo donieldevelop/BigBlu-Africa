@@ -83,3 +83,14 @@ section[id]{scroll-margin-top:82px}
  .svc .org-card{max-width:none}
 }
 @media(max-width:560px){.org-row,.svc{column-gap:24px}.org-row .left:after,.org-row .right:before{width:12px}.org-row .left:after{right:-12px}.org-row .right:before{left:-12px}}
+
+/* --- Site multi-pages --- */
+nav a.active{color:var(--cyan)}nav a.nav-btn.active{color:#fff!important;background:var(--blue)}
+.page-head{background:linear-gradient(115deg,#032d5c 0%,#075d99 60%,#0b8fca 100%);color:#fff;padding:64px 0 56px}
+.page-head .kicker{color:var(--cyan2)}.page-head h1{font-size:clamp(34px,5vw,54px);line-height:1.08;margin:0 0 12px}.page-head p:last-child{color:#d6e8f5;max-width:680px;margin:0;font-size:17px}
+.home-voyage{background:linear-gradient(120deg,#fff 0%,#fdf1f3 100%)}
+.hv{display:grid;grid-template-columns:1.3fr .7fr;gap:50px;align-items:center}.hv img{width:100%;max-width:320px;justify-self:center;border-radius:14px;box-shadow:0 20px 50px rgba(6,59,112,.18);transform:rotate(2deg)}
+.btn.ghost-dark{border:2px solid var(--navy);color:var(--navy);background:transparent}
+.hp{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0}
+.message.ok{color:#0f6e56}.message.err{color:#c0122b}
+@media(max-width:800px){.hv{grid-template-columns:1fr}.hv img{max-width:240px}}

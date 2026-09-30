@@ -2,23 +2,58 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Inscriptions VISION@FRICA : le public peut seulement ENVOYER une inscription.
+    // ---- Personnel BIGBLU (espace admin) ----
+    function staffDoc() { return get(/databases/$(database)/documents/staff/$(request.auth.uid)); }
+    function isStaff() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/staff/$(request.auth.uid))
+        && staffDoc().data.actif == true;
+    }
+    function isAdmin() { return isStaff() && staffDoc().data.role == 'admin'; }
+
+    match /staff/{uid} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // ---- Inscriptions voyage (Albanie) ----
+    // Public : peut seulement ENVOYER une inscription (aucune lecture possible).
     match /inscriptions_voyage/{id} {
-      allow create: if request.resource.data.keys().hasOnly([
-            'programme','nom','prenoms','dateNaissance','sexe','nationalite','telephone',
-            'email','ville','passeport','metier','poste','clubActuel','licencePro',
-            'disponibilite','message','statut','source','createdAt'])
+      allow create: if request.auth == null
+        && request.resource.data.keys().hasOnly([
+            'programme','nom','prenoms','dateNaissance','sexe','nationalite','ville','telephone','email',
+            'passeport','metier','poste','licencePro','clubActuel','joursAppel','creneau','bureau','bureauDate',
+            'message','lien','source','statut','createdAt'])
         && request.resource.data.programme in ['travail', 'football']
         && request.resource.data.nom is string && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 300
         && request.resource.data.telephone is string && request.resource.data.telephone.size() >= 8 && request.resource.data.telephone.size() <= 300
+        && request.resource.data.joursAppel is list && request.resource.data.joursAppel.size() <= 7
         && request.resource.data.statut == 'nouveau'
         && request.resource.data.createdAt == request.time;
-      allow read, update, delete: if false;
+      // Service client et admin : lecture + suivi (statut, notes, RDV).
+      allow read: if isStaff();
+      allow update: if isStaff()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['statut','notes','historique','rdvDate','updatedAt','updatedBy']);
+      // Suppression : admin général uniquement.
+      allow delete: if isAdmin();
+    }
+
+    // ---- Messages (contact + projets) ----
+    match /messages/{id} {
+      allow create: if request.auth == null
+        && request.resource.data.keys().hasOnly(['type','nom','entreprise','email','telephone','objet','message','lu','createdAt'])
+        && request.resource.data.type in ['contact', 'projet']
+        && request.resource.data.nom is string && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 120
+        && request.resource.data.message is string && request.resource.data.message.size() <= 2000
+        && request.resource.data.lu == false
+        && request.resource.data.createdAt == request.time;
+      allow read: if isStaff();
+      allow update: if isStaff() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lu']);
+      allow delete: if isAdmin();
     }
 
     // Tout le reste est fermé.
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /{document=**} { allow read, write: if false; }
   }
 }
