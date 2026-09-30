@@ -60,8 +60,8 @@ page("domaines.html", "Nos domaines — BIGBLU AFRICA", "Les domaines d'interven
      head("NOS DOMAINES", "Une approche multisectorielle.", "Des pôles complémentaires pour accompagner les opportunités et les projets.") + r("domaines.html"), "/domaines")
 page("structures.html", "Nos structures — BIGBLU AFRICA", "VISION@AFRICA et BIGBLU PHARMA PASS, les pôles spécialisés de BIGBLU AFRICA.",
      head("NOS STRUCTURES", "Des pôles spécialisés.", "Des filiales et activités dédiées à l'intermédiation, au voyage et à la santé.") + r("structures.html"), "/structures")
-page("voyage/index.html", "Voyage — Cap sur l'Albanie | VISION@FRICA", "Travail et football en Albanie avec VISION@FRICA : avantages, procédure et inscription en ligne.",
-     r("v-hero.html") + r("v-programmes.html") + r("v-procedure.html"), "/voyage", "voyages")
+page("voyage/index.html", "Voyage — Cap sur l'Albanie | VISION@FRICA", "Travail et football en Albanie avec VISION@FRICA : choisissez votre programme et laissez-vous guider.",
+     r("v-hero.html") + r("v-entree.html"), "/voyage", "voyages")
 page("contact.html", "Contact — BIGBLU AFRICA", "Contactez BIGBLU AFRICA ou soumettez votre projet.",
      head("CONTACT", "Parlons de votre projet.", "Écrivez-nous ou présentez votre projet à BIGBLU AFRICA.") + r("contact.html") + r("soumettre.html"), "/contact", "", FORMS)
 page("voyage/albanie/travail.html", "Travail en Albanie — VISION@FRICA", "Poste d'ouvrier en usine en Albanie : avantages, procédure, documents et inscription en ligne.",

@@ -50,7 +50,7 @@ def parcours(p):
        <ul class="v-list">{lis}</ul>
        <p class="p-q">{question}</p>
      </div>
-     <div class="p-nav"><button class="btn v-red p-next" type="button">{oui} →</button></div>
+     <div class="p-nav"><button class="btn p-back p-go" data-go="non" type="button">Non, merci</button><button class="btn v-red p-next" type="button">{oui} →</button></div>
    </div>
 
    <div class="p-step" data-step="2" hidden>
@@ -58,8 +58,9 @@ def parcours(p):
        <h2>La procédure à suivre</h2>
        <ol class="p-proc">{steps}</ol>
        <p class="v-note">✈️ Billet d'avion : à la charge du client.</p>
+       <p class="p-q">Êtes-vous prêt(e) à payer l'ouverture du dossier (50 000 FCFA) pour lancer la procédure ?</p>
      </div>
-     <div class="p-nav"><button class="btn p-back" type="button">← Retour</button><button class="btn v-red p-next" type="button">J'ai compris, continuer →</button></div>
+     <div class="p-nav p-nav3"><button class="btn p-back" type="button">← Retour</button><button class="btn p-back p-go" data-go="plus_tard" type="button">Pas pour le moment</button><button class="btn v-red p-next" type="button">Oui, je suis prêt(e) →</button></div>
    </div>
 
    <div class="p-step" data-step="3" hidden>
@@ -111,6 +112,43 @@ def parcours(p):
      <p>Un conseiller VISION@FRICA vous appellera <strong>selon les disponibilités que vous avez indiquées</strong> pour fixer votre rendez-vous au bureau.</p>
      <p>📍 Bureau : <strong>Cocody Angré CNPS</strong> · 📞 <a href="tel:+2252735997250">+225 27 35 99 72 50</a></p>
      <p class="p-rappel">Pensez à préparer vos documents : {", ".join(d.lower() for d in DOCS[p])}.</p>
+   </div>
+
+   <div class="p-step" data-step="plus_tard" hidden>
+     <form class="v-form p-short" data-kind="plus_tard">
+       <h2>Pas de souci, on reste en contact !</h2>
+       <p class="p-intro">Laissez vos coordonnées : un conseiller vous recontactera au moment qui vous convient pour lancer votre dossier.</p>
+       <div class="v-grid">
+        <label>Nom *<input name="nom" required maxlength="80"></label>
+        <label>Prénoms *<input name="prenoms" required maxlength="120"></label>
+        <label>Téléphone (WhatsApp) *<input type="tel" name="telephone" required minlength="8" maxlength="25" placeholder="Ex. 07 00 00 00 00"></label>
+        <label>Quand pensez-vous être prêt(e) ? *<select name="quandPret" required><option value="">Choisir</option><option>Dans 2 semaines</option><option>Dans 1 mois</option><option>Dans 3 mois</option><option>Je ne sais pas encore</option></select></label>
+       </div>
+       <input class="hp" name="site_web" tabindex="-1" autocomplete="off" aria-hidden="true">
+       <div class="p-nav"><button class="btn p-back p-go" data-go="2" type="button">← Retour</button><button type="submit" class="btn v-red">Être recontacté(e) plus tard</button></div>
+       <p class="message" aria-live="polite"></p>
+     </form>
+   </div>
+
+   <div class="p-step" data-step="non" hidden>
+     <form class="v-form p-short" data-kind="non">
+       <h2>Merci de votre intérêt pour VISION@FRICA.</h2>
+       <p class="p-intro">Ce programme ne vous convient pas ? D'autres opportunités arrivent bientôt. Laissez votre numéro si vous souhaitez en être informé(e) — c'est facultatif.</p>
+       <div class="v-grid">
+        <label>Nom<input name="nom" maxlength="80"></label>
+        <label>Téléphone (WhatsApp)<input type="tel" name="telephone" minlength="8" maxlength="25" placeholder="Ex. 07 00 00 00 00"></label>
+       </div>
+       <input class="hp" name="site_web" tabindex="-1" autocomplete="off" aria-hidden="true">
+       <div class="p-nav"><a class="btn p-back" href="/voyage">Quitter</a><button type="submit" class="btn v-red">Me tenir informé(e)</button></div>
+       <p class="message" aria-live="polite"></p>
+     </form>
+   </div>
+
+   <div class="p-step p-merci" data-step="fin" hidden>
+     <div class="v-check">✓</div>
+     <h2 class="fin-titre">Merci, c'est bien noté !</h2>
+     <p class="fin-texte"></p>
+     <p><a class="btn v-navy" href="/voyage">Retour à la page Voyage</a></p>
    </div>
   </div>
  </div>

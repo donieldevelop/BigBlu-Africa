@@ -11,13 +11,13 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 
 const STATUTS = [
   ["nouveau", "Nouveau"], ["a_rappeler", "À rappeler"], ["appele", "Appelé"], ["rdv_fixe", "RDV fixé"],
-  ["dossier_ouvert", "Dossier ouvert"], ["visa_en_cours", "Visa en cours"], ["visa_obtenu", "Visa obtenu"], ["pas_interesse", "Pas intéressé"]
+  ["dossier_ouvert", "Dossier ouvert"], ["visa_en_cours", "Visa en cours"], ["visa_obtenu", "Visa obtenu"], ["plus_tard", "Prospect plus tard"], ["pas_interesse", "Pas intéressé"]
 ];
 const SL = Object.fromEntries(STATUTS);
 const FUNNEL = ["nouveau", "a_rappeler", "appele", "rdv_fixe", "dossier_ouvert", "visa_en_cours", "visa_obtenu"];
 const JOURS = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 
-let me = null, INS = [], MSG = [], STAFF = [], unsubs = [], officeWeek = 0, openId = null;
+let me = null, INS = [], MSG = [], STAFF = [], VIS = [], unsubs = [], officeWeek = 0, openId = null;
 
 /* ---------- Dates ---------- */
 const toDate = t => t?.toDate ? t.toDate() : (t ? new Date(t) : null);
@@ -67,6 +67,7 @@ function listen() {
   unsubs.push(onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "desc")), s => {
     MSG = s.docs.map(d => ({ id: d.id, ...d.data() })); renderMsg();
   }, err => console.error(err)));
+  unsubs.push(onSnapshot(collection(db, "visites"), s => { VIS = s.docs.map(d => d.data()); renderDash(); }, err => console.error(err)));
   unsubs.push(onSnapshot(collection(db, "staff"), s => { STAFF = s.docs.map(d => ({ id: d.id, ...d.data() })); renderTeam(); }, () => {}));
 }
 function renderAll() { renderDash(); renderIns(); if (openId) openDetail(openId); $("#badgeNew").textContent = INS.filter(i => i.statut === "nouveau").length || ""; }
@@ -100,14 +101,16 @@ function renderDash() {
   const L = INS.filter(inPeriod), wk0 = monday(new Date()), wk1 = addDays(wk0, 7);
   const cnt = s => L.filter(i => i.statut === s).length;
   const rdvWeek = INS.filter(i => i.rdvDate && new Date(i.rdvDate) >= wk0 && new Date(i.rdvDate) < wk1).length;
-  const k = [["Inscriptions", L.length, true], ["Nouveaux", cnt("nouveau")], ["À appeler aujourd'hui", INS.filter(toCallToday).length],
-    ["RDV cette semaine", rdvWeek], ["Dossiers ouverts", L.filter(i => FUNNEL.indexOf(i.statut) >= 4).length], ["Visas obtenus", cnt("visa_obtenu")]];
+  const k = [["Prêts (inscription complète)", L.filter(i => (i.parcours || "complet") === "complet").length, true], ["Prospects plus tard", L.filter(i => i.parcours === "plus_tard").length],
+    ["À appeler aujourd'hui", INS.filter(toCallToday).length], ["RDV cette semaine", rdvWeek],
+    ["Dossiers ouverts", L.filter(i => FUNNEL.indexOf(i.statut) >= 4).length], ["Visas obtenus", cnt("visa_obtenu")]];
   $("#kpis").innerHTML = k.map(([l, v, h]) => `<div class="kpi${h ? " hl" : ""}"><small>${l}</small><strong>${v}</strong></div>`).join("");
 
   $("#todayLbl").textContent = todayName();
   const call = INS.filter(toCallToday);
   $("#callToday").innerHTML = call.length ? call.map(i => mini(i)).join("") : `<p class="empty">Personne à appeler aujourd'hui.</p>`;
   renderOffice();
+  renderVisites(); renderRelances();
 
   const days = Number($("#period").value) || 30, byDay = {};
   INS.forEach(i => { const c = toDate(i.createdAt); if (c) byDay[iso(c)] = (byDay[iso(c)] || 0) + 1; });
@@ -130,6 +133,25 @@ function renderDash() {
     <b>Passeport</b><div class="split-bar">${pv ? `<div style="flex:${pv};background:var(--green)">${pct(pv, L.length)}%</div>` : ""}${pc ? `<div style="flex:${pc};background:#e0a800">${pct(pc, L.length)}%</div>` : ""}${L.length - pv - pc ? `<div style="flex:${L.length - pv - pc};background:#9aa8b5">${pct(L.length - pv - pc, L.length)}%</div>` : ""}${!L.length ? `<div style="flex:1;background:#dfe8ef;color:var(--muted)">—</div>` : ""}</div>
     <div class="legend"><span><i style="background:var(--green)"></i>Valide : ${pv}</span><span><i style="background:#e0a800"></i>En cours : ${pc}</span><span><i style="background:#9aa8b5"></i>Non : ${L.length - pv - pc}</span></div>
     <b>Postes (football)</b><div class="legend" style="margin-top:6px">${Object.entries(postes).map(([p, v]) => `<span>${esc(p)} : <b>${v}</b></span>`).join("") || "<span>—</span>"}</div>`;
+}
+function renderVisites() {
+  const p = Number($("#period").value), lim = p ? addDays(new Date(), -p) : null;
+  const V = VIS.filter(v => { const c = toDate(v.createdAt); return !lim || (c && c >= lim); });
+  const uniq = e => new Set(V.filter(v => v.etape === e).map(v => v.sid)).size;
+  const L = INS.filter(inPeriod), complet = L.filter(i => (i.parcours || "complet") === "complet").length;
+  const rows = [["Avantages vus", uniq("avantages")], ["Procédure et frais vus", uniq("procedure")], ["Documents vus (prêts à payer)", uniq("documents")],
+    ["Formulaire ouvert", uniq("formulaire")], ["Inscription complète envoyée", complet]];
+  const max = Math.max(1, rows[0][1]);
+  $("#visites").innerHTML = rows.map(([l, v]) => `<div class="frow"><span>${l}</span><div class="track"><div class="fill" style="width:${v / max * 100}%;background:var(--blue)"></div></div><b>${v}</b></div>`).join("")
+    + `<div class="legend" style="margin-top:12px"><span>« Non, merci » à l'étape 1 : <b>${uniq("choix_non")}</b></span><span>« Pas pour le moment » à l'étape 2 : <b>${uniq("choix_plus_tard")}</b></span>`
+    + `<span>Prospects « plus tard » enregistrés : <b>${L.filter(i => i.parcours === "plus_tard").length}</b></span><span>Contacts « non » laissés : <b>${L.filter(i => i.parcours === "non").length}</b></span></div>`;
+}
+const DELAI = { "Dans 2 semaines": 14, "Dans 1 mois": 30, "Dans 3 mois": 90, "Je ne sais pas encore": 30 };
+function relanceDate(i) { const c = toDate(i.createdAt); return c ? addDays(c, DELAI[i.quandPret] ?? 30) : null; }
+function renderRelances() {
+  const L = INS.filter(i => i.statut === "plus_tard").map(i => [i, relanceDate(i)]).filter(([, d]) => d).sort((a, b) => a[1] - b[1]);
+  const now = new Date();
+  $("#relances").innerHTML = L.length ? L.map(([i, d]) => mini(i, (d <= now ? "⏰ À relancer maintenant" : "Relance le " + fmt(d)) + " · " + (i.quandPret || ""))).join("") : `<p class="empty">Aucun prospect à relancer.</p>`;
 }
 function renderOffice() {
   const s = addDays(monday(new Date()), 7 * officeWeek), e = addDays(s, 6);
@@ -171,6 +193,8 @@ function openDetail(id) {
     ["Né(e) le", i.dateNaissance], ["Sexe", i.sexe], ["Nationalité", i.nationalite], ["Ville", i.ville], ["Passeport valide", i.passeport],
     ...(i.programme === "travail" ? [["Métier", i.metier || "—"]] : [["Poste", i.poste], ["Licence pro", i.licencePro], ["Club", i.clubActuel || "—"]]),
     ["Jours d'appel", (i.joursAppel || []).join(", ")], ["Créneau", i.creneau], ["Bureau", i.bureau + (i.bureauDate ? " (" + fmt(new Date(i.bureauDate)) + ")" : "")],
+    ["Parcours", { complet: "Inscription complète", plus_tard: "Pas pour le moment", non: "Non intéressé" }[i.parcours || "complet"]],
+    ["Prêt à payer 50 000 F", i.pretPayer === false ? "Non" : "Oui"], ...(i.quandPret ? [["Prêt(e)", i.quandPret]] : []),
     ["Message", i.message || "—"], ["Inscrit le", fmtH(toDate(i.createdAt))], ["Source", `${i.source || "—"} · ${i.lien || ""}`]];
   const notes = [...(i.notes || [])].reverse();
   $("#drawerPanel").innerHTML = `
@@ -206,7 +230,7 @@ function openDetail(id) {
 /* ---------- Export Excel (admin) ---------- */
 $("#export").addEventListener("click", async () => {
   const L = filtered().map(i => ({
-    "Date": fmtH(toDate(i.createdAt)), "Programme": i.programme, "Statut": SL[i.statut], "Nom": i.nom, "Prénoms": i.prenoms,
+    "Date": fmtH(toDate(i.createdAt)), "Programme": i.programme, "Parcours": i.parcours || "complet", "Prêt à payer": i.pretPayer === false ? "Non" : "Oui", "Quand prêt": i.quandPret || "", "Statut": SL[i.statut], "Nom": i.nom, "Prénoms": i.prenoms,
     "Téléphone": i.telephone, "Email": i.email, "Né(e) le": i.dateNaissance, "Sexe": i.sexe, "Nationalité": i.nationalite, "Ville": i.ville,
     "Passeport": i.passeport, "Métier": i.metier, "Poste": i.poste, "Licence pro": i.licencePro, "Club": i.clubActuel,
     "Jours d'appel": (i.joursAppel || []).join(", "), "Créneau": i.creneau, "Bureau": i.bureau, "Date bureau": i.bureauDate, "RDV": i.rdvDate || "",

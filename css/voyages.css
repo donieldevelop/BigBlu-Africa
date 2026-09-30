@@ -51,3 +51,10 @@
 .v-merci h3{color:var(--navy);font-size:22px;margin:0 0 8px}.v-merci a{color:var(--blue)}
 @media(max-width:900px){.v-hero-grid{grid-template-columns:1fr}.v-poster{max-width:300px}.v-steps{grid-template-columns:1fr 1fr}.v-docs{grid-template-columns:1fr}}
 @media(max-width:620px){.v-hero{padding:44px 0}.v-progs,.v-grid,.v-choice{grid-template-columns:1fr}.v-steps{grid-template-columns:1fr}.v-form{padding:20px}.v-prog{padding:22px}}
+.v-entrees{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.v-entree{display:flex;align-items:center;gap:16px;padding:26px;border-radius:16px;background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--ink);box-shadow:0 10px 30px rgba(6,59,112,.06);transition:transform .2s,box-shadow .2s}
+.v-entree:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(6,59,112,.12)}
+.v-entree.travail{border-left:6px solid var(--red)}.v-entree.football{border-left:6px solid var(--navy)}
+.v-entree div{flex:1}.v-entree h3{margin:0;color:var(--navy);font-size:20px}.v-entree p{margin:4px 0 0;color:var(--muted)}
+.v-entree b{white-space:nowrap;padding:10px 16px;border-radius:8px;color:#fff;font-size:14px}.v-entree.travail b{background:var(--red)}.v-entree.football b{background:var(--navy)}
+@media(max-width:700px){.v-entrees{grid-template-columns:1fr}.v-entree{flex-wrap:wrap}.v-entree b{width:100%;text-align:center}}

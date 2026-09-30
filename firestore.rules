@@ -23,12 +23,13 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
             'programme','nom','prenoms','dateNaissance','sexe','nationalite','ville','telephone','email',
             'passeport','metier','poste','licencePro','clubActuel','joursAppel','creneau','bureau','bureauDate',
-            'message','lien','source','statut','createdAt'])
+            'message','parcours','pretPayer','quandPret','lien','source','statut','createdAt'])
         && request.resource.data.programme in ['travail', 'football']
         && request.resource.data.nom is string && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 300
         && request.resource.data.telephone is string && request.resource.data.telephone.size() >= 8 && request.resource.data.telephone.size() <= 300
         && request.resource.data.joursAppel is list && request.resource.data.joursAppel.size() <= 7
-        && request.resource.data.statut == 'nouveau'
+        && request.resource.data.parcours in ['complet', 'plus_tard', 'non']
+        && request.resource.data.statut in ['nouveau', 'plus_tard', 'pas_interesse']
         && request.resource.data.createdAt == request.time;
       // Service client et admin : lecture + suivi (statut, notes, RDV).
       allow read: if isStaff();
@@ -36,6 +37,19 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['statut','notes','historique','rdvDate','updatedAt','updatedBy']);
       // Suppression : admin général uniquement.
+      allow delete: if isAdmin();
+    }
+
+    // ---- Statistiques anonymes du parcours (étapes atteintes) ----
+    match /visites/{id} {
+      allow create: if request.auth == null
+        && request.resource.data.keys().hasOnly(['programme','etape','sid','source','createdAt'])
+        && request.resource.data.programme in ['travail', 'football']
+        && request.resource.data.etape in ['avantages','procedure','documents','formulaire','choix_plus_tard','choix_non']
+        && request.resource.data.sid is string && request.resource.data.sid.size() <= 20
+        && request.resource.data.source is string && request.resource.data.source.size() <= 60
+        && request.resource.data.createdAt == request.time;
+      allow read: if isStaff();
       allow delete: if isAdmin();
     }
 
