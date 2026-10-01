@@ -3,6 +3,7 @@
   "trailingSlash": false,
   "redirects": [
     { "source": "/voyages", "destination": "/voyage", "permanent": true },
+    { "source": "/voyage/admin", "destination": "/admin", "permanent": false },
     { "source": "/albanie/travail", "destination": "/voyage/albanie/travail", "permanent": false },
     { "source": "/albanie/football", "destination": "/voyage/albanie/football", "permanent": false },
     { "source": "/albanie", "destination": "/voyage", "permanent": false }

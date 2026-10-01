@@ -18,6 +18,19 @@
     <button class="btn primary" type="submit">Se connecter</button>
     <button class="linkbtn" type="button" id="forgot">Mot de passe oublié ?</button>
     <p class="msg" id="loginMsg"></p>
+    <button class="linkbtn" type="button" id="toSetup" hidden>Première utilisation : créer le compte administrateur →</button>
+  </form>
+  <form class="login-card" id="setupForm" hidden>
+    <img src="/assets/bigblu-logo.jpg" alt="BIGBLU AFRICA">
+    <h1>Créer le compte administrateur</h1>
+    <p>Cette page ne sert qu'une seule fois. Une fois le compte créé, elle disparaît définitivement.</p>
+    <label>Nom complet<input name="nom" required maxlength="80"></label>
+    <label>Email<input type="email" name="email" required autocomplete="username"></label>
+    <label>Mot de passe (8 caractères min.)<input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+    <label>Confirmer le mot de passe<input type="password" name="password2" required minlength="8" autocomplete="new-password"></label>
+    <button class="btn primary" type="submit">Créer mon compte admin</button>
+    <button class="linkbtn" type="button" id="toLogin">← J'ai déjà un compte</button>
+    <p class="msg" id="setupMsg"></p>
   </form>
 </div>
 

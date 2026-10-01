@@ -14,6 +14,21 @@ service cloud.firestore {
     match /staff/{uid} {
       allow read: if isStaff();
       allow write: if isAdmin();
+      // Première configuration : le tout premier compte admin se crée lui-même depuis /admin,
+      // une seule fois. Ensuite le verrou config/setup existe et cette porte est fermée.
+      allow create: if request.auth != null && request.auth.uid == uid
+        && !exists(/databases/$(database)/documents/config/setup)
+        && existsAfter(/databases/$(database)/documents/config/setup)
+        && request.resource.data.role == 'admin' && request.resource.data.actif == true;
+    }
+
+    match /config/setup {
+      allow get: if true;
+      allow create: if request.auth != null
+        && !exists(/databases/$(database)/documents/config/setup)
+        && request.resource.data.keys().hasOnly(['done','by','at'])
+        && request.resource.data.by == request.auth.uid
+        && getAfter(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == 'admin';
     }
 
     // ---- Inscriptions voyage (Albanie) ----

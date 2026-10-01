@@ -2,7 +2,7 @@ import { app, db, firebaseConfig } from "./firebase.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, serverTimestamp }
+import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, serverTimestamp, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const auth = getAuth(app);
@@ -17,6 +17,7 @@ const SL = Object.fromEntries(STATUTS);
 const FUNNEL = ["nouveau", "a_rappeler", "appele", "rdv_fixe", "dossier_ouvert", "visa_en_cours", "visa_obtenu"];
 const JOURS = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 
+let settingUp = false;
 let me = null, INS = [], MSG = [], STAFF = [], VIS = [], unsubs = [], officeWeek = 0, openId = null;
 
 /* ---------- Dates ---------- */
@@ -30,9 +31,10 @@ const todayName = () => JOURS[new Date().getDay()];
 
 /* ---------- Auth ---------- */
 onAuthStateChanged(auth, async user => {
+  if (settingUp) return;
   $("#boot").hidden = true;
   unsubs.forEach(u => u()); unsubs = [];
-  if (!user) { $("#app").hidden = true; $("#login").hidden = false; return; }
+  if (!user) { $("#app").hidden = true; $("#login").hidden = false; checkSetup(); return; }
   const snap = await getDoc(doc(db, "staff", user.uid)).catch(() => null);
   if (!snap?.exists() || snap.data().actif !== true) {
     $("#loginMsg").textContent = "Ce compte n'a pas accès à l'espace admin."; $("#loginMsg").className = "msg err";
@@ -56,6 +58,35 @@ $("#forgot").addEventListener("click", async () => {
   if (!email) { m.textContent = "Saisissez d'abord votre email."; m.className = "msg err"; return; }
   try { await sendPasswordResetEmail(auth, email); m.textContent = "Un email de réinitialisation a été envoyé."; m.className = "msg ok"; }
   catch { m.textContent = "Impossible d'envoyer l'email."; m.className = "msg err"; }
+});
+/* ---------- Première configuration (création du premier admin) ---------- */
+async function checkSetup() {
+  try { const s = await getDoc(doc(db, "config", "setup")); $("#toSetup").hidden = s.exists(); if (s.exists()) showLogin(); }
+  catch { $("#toSetup").hidden = true; }
+}
+const showLogin = () => { $("#setupForm").hidden = true; $("#loginForm").hidden = false; };
+$("#toSetup").addEventListener("click", () => { $("#loginForm").hidden = true; $("#setupForm").hidden = false; });
+$("#toLogin").addEventListener("click", showLogin);
+$("#setupForm").addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target, m = $("#setupMsg");
+  if (f.password.value !== f.password2.value) { m.textContent = "Les deux mots de passe ne correspondent pas."; m.className = "msg err"; return; }
+  m.textContent = "Création du compte…"; m.className = "msg"; settingUp = true;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, f.email.value.trim(), f.password.value);
+    const b = writeBatch(db);
+    b.set(doc(db, "staff", cred.user.uid), { nom: f.nom.value.trim(), email: f.email.value.trim(), role: "admin", actif: true, createdAt: serverTimestamp() });
+    b.set(doc(db, "config", "setup"), { done: true, by: cred.user.uid, at: serverTimestamp() });
+    await b.commit();
+    settingUp = false; location.reload();
+  } catch (err) {
+    console.error(err); settingUp = false;
+    m.className = "msg err";
+    m.textContent = err.code === "auth/email-already-in-use" ? "Cet email a déjà un compte : connectez-vous."
+      : err.code === "auth/operation-not-allowed" ? "La connexion par email n'est pas encore activée dans Firebase (Authentication → Méthode de connexion)."
+      : err.code === "permission-denied" ? "Le compte administrateur a déjà été créé, ou les règles Firestore ne sont pas publiées."
+      : "Création impossible : " + (err.code || "erreur");
+    if (auth.currentUser) await signOut(auth).catch(() => {});
+  }
 });
 $("#logout").addEventListener("click", () => signOut(auth));
 
