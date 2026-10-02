@@ -13,11 +13,11 @@ PROCEDURE = {
  "travail": [("Ouverture du dossier","50 000 FCFA","Nous ouvrons votre dossier et faisons la demande de votre contrat de travail."),
              ("Obtention du contrat de travail","","Une fois votre contrat de travail obtenu, nous passons à la procédure de visa."),
              ("Procédure de visa","150 000 FCFA","Le délai de traitement du visa est de 45 jours au plus."),
-             ("Après l'obtention du visa","","Une fois votre visa obtenu, vous procédez au règlement de nos honoraires.")],
+             ("Après l'obtention du visa","Honoraires : 2 500 000 FCFA","Une fois votre visa obtenu, vous procédez au règlement de nos honoraires.")],
  "football": [("Ouverture du dossier","50 000 FCFA","Nous ouvrons votre dossier et lançons les démarches auprès du centre de formation."),
              ("Lettre du centre de formation","","Après réception de la lettre officielle du centre de formation, nous poursuivons la procédure."),
              ("Demande de visa","150 000 FCFA","Nous lançons la procédure d'obtention du visa. Délai de traitement : 45 jours au plus."),
-             ("Après l'obtention du visa","","Une fois le visa obtenu, vous procédez au règlement de nos honoraires.")],
+             ("Après l'obtention du visa","Honoraires : 2 500 000 FCFA","Une fois le visa obtenu, vous procédez au règlement de nos honoraires.")],
 }
 DOCS = {
  "travail": ["Passeport valide","Photo sur fond blanc","Visite médicale"],
