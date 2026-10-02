@@ -1,6 +1,5 @@
-import { app, db, firebaseConfig } from "./firebase.js";
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword }
+import { app, db } from "./firebase.js";
+import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, serverTimestamp, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -17,8 +16,7 @@ const SL = Object.fromEntries(STATUTS);
 const FUNNEL = ["nouveau", "a_rappeler", "appele", "rdv_fixe", "dossier_ouvert", "visa_en_cours", "visa_obtenu"];
 const JOURS = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 
-let settingUp = false;
-let me = null, INS = [], MSG = [], STAFF = [], VIS = [], unsubs = [], officeWeek = 0, openId = null;
+let me = null, INS = [], MSG = [], STAFF = [], INV = [], VIS = [], unsubs = [], officeWeek = 0, openId = null;
 
 /* ---------- Dates ---------- */
 const toDate = t => t?.toDate ? t.toDate() : (t ? new Date(t) : null);
@@ -29,66 +27,73 @@ const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); r
 const iso = d => d.toISOString().slice(0, 10);
 const todayName = () => JOURS[new Date().getDay()];
 
-/* ---------- Auth ---------- */
+
+/* ---------- Connexion Google ---------- */
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: "select_account" });
+const SETUP_KEY = "bb_setup";
+const setMode = v => { try { v ? sessionStorage.setItem(SETUP_KEY, "1") : sessionStorage.removeItem(SETUP_KEY); } catch {} };
+const isSetupMode = () => { try { return sessionStorage.getItem(SETUP_KEY) === "1"; } catch { return false; } };
+const say = (t, cls = "") => { const m = $("#loginMsg"); m.textContent = t; m.className = "msg " + cls; };
+
+async function google() {
+  say("Ouverture de Google…");
+  try { await signInWithPopup(auth, provider); }
+  catch (err) {
+    if (["auth/popup-blocked", "auth/operation-not-supported-in-this-environment"].includes(err.code)) return signInWithRedirect(auth, provider);
+    console.error(err);
+    say(err.code === "auth/unauthorized-domain" ? "Ce domaine n'est pas autorisé dans Firebase (Authentication → Paramètres → Domaines autorisés)."
+      : err.code === "auth/operation-not-allowed" ? "La connexion Google n'est pas activée dans Firebase."
+      : err.code === "auth/popup-closed-by-user" ? "" : "Connexion impossible : " + err.code, "err");
+  }
+}
+$("#googleBtn").addEventListener("click", () => { setMode(false); google(); });
+$("#setupBtn").addEventListener("click", () => { setMode(true); google(); });
+$("#logout").addEventListener("click", () => signOut(auth));
+
+async function checkSetup() {
+  try { const s = await getDoc(doc(db, "config", "setup")); $("#setupBox").hidden = s.exists(); }
+  catch { $("#setupBox").hidden = true; }
+}
+
+// Donne l'accès : compte existant, première configuration, ou invitation.
+async function resolveStaff(user) {
+  const ref = doc(db, "staff", user.uid), snap = await getDoc(ref).catch(() => null);
+  if (snap?.exists()) return snap.data();
+  const email = (user.email || "").toLowerCase(), nom = user.displayName || email;
+  if (isSetupMode()) {
+    const b = writeBatch(db);
+    b.set(ref, { nom, email, role: "admin", actif: true, createdAt: serverTimestamp() });
+    b.set(doc(db, "config", "setup"), { done: true, by: user.uid, at: serverTimestamp() });
+    try { await b.commit(); setMode(false); return (await getDoc(ref)).data(); }
+    catch (e) { console.error(e); setMode(false); throw new Error("Le compte administrateur a déjà été créé, ou les règles Firestore ne sont pas publiées."); }
+  }
+  const inv = await getDoc(doc(db, "invitations", email)).catch(() => null);
+  if (inv?.exists()) {
+    const b = writeBatch(db);
+    b.set(ref, { nom: inv.data().nom || nom, email, role: inv.data().role, actif: true, createdAt: serverTimestamp() });
+    b.delete(doc(db, "invitations", email));
+    await b.commit();
+    return (await getDoc(ref)).data();
+  }
+  throw new Error(`Le compte ${email} n'a pas accès à l'espace admin. Demandez à l'administrateur de vous inviter.`);
+}
+
 onAuthStateChanged(auth, async user => {
-  if (settingUp) return;
   $("#boot").hidden = true;
   unsubs.forEach(u => u()); unsubs = [];
   if (!user) { $("#app").hidden = true; $("#login").hidden = false; checkSetup(); return; }
-  const snap = await getDoc(doc(db, "staff", user.uid)).catch(() => null);
-  if (!snap?.exists() || snap.data().actif !== true) {
-    $("#loginMsg").textContent = "Ce compte n'a pas accès à l'espace admin."; $("#loginMsg").className = "msg err";
-    await signOut(auth); return;
-  }
-  me = { uid: user.uid, ...snap.data() };
+  say("Vérification de l'accès…");
+  let data;
+  try { data = await resolveStaff(user); } catch (e) { await signOut(auth); say(e.message, "err"); return; }
+  if (data.actif !== true) { await signOut(auth); say("Ce compte a été désactivé.", "err"); return; }
+  me = { uid: user.uid, ...data };
   $("#meName").textContent = me.nom || user.email;
   $("#meRole").textContent = me.role === "admin" ? "Admin général" : "Service client";
   $$(".admin-only").forEach(e => e.hidden = me.role !== "admin");
-  $("#login").hidden = true; $("#app").hidden = false;
+  $("#login").hidden = true; $("#app").hidden = false; say("");
   listen();
 });
-$("#loginForm").addEventListener("submit", async e => {
-  e.preventDefault(); const f = e.target, m = $("#loginMsg");
-  m.textContent = "Connexion…"; m.className = "msg";
-  try { await signInWithEmailAndPassword(auth, f.email.value.trim(), f.password.value); m.textContent = ""; }
-  catch { m.textContent = "Email ou mot de passe incorrect."; m.className = "msg err"; }
-});
-$("#forgot").addEventListener("click", async () => {
-  const email = $("#loginForm").email.value.trim(), m = $("#loginMsg");
-  if (!email) { m.textContent = "Saisissez d'abord votre email."; m.className = "msg err"; return; }
-  try { await sendPasswordResetEmail(auth, email); m.textContent = "Un email de réinitialisation a été envoyé."; m.className = "msg ok"; }
-  catch { m.textContent = "Impossible d'envoyer l'email."; m.className = "msg err"; }
-});
-/* ---------- Première configuration (création du premier admin) ---------- */
-async function checkSetup() {
-  try { const s = await getDoc(doc(db, "config", "setup")); $("#toSetup").hidden = s.exists(); if (s.exists()) showLogin(); }
-  catch { $("#toSetup").hidden = true; }
-}
-const showLogin = () => { $("#setupForm").hidden = true; $("#loginForm").hidden = false; };
-$("#toSetup").addEventListener("click", () => { $("#loginForm").hidden = true; $("#setupForm").hidden = false; });
-$("#toLogin").addEventListener("click", showLogin);
-$("#setupForm").addEventListener("submit", async e => {
-  e.preventDefault(); const f = e.target, m = $("#setupMsg");
-  if (f.password.value !== f.password2.value) { m.textContent = "Les deux mots de passe ne correspondent pas."; m.className = "msg err"; return; }
-  m.textContent = "Création du compte…"; m.className = "msg"; settingUp = true;
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, f.email.value.trim(), f.password.value);
-    const b = writeBatch(db);
-    b.set(doc(db, "staff", cred.user.uid), { nom: f.nom.value.trim(), email: f.email.value.trim(), role: "admin", actif: true, createdAt: serverTimestamp() });
-    b.set(doc(db, "config", "setup"), { done: true, by: cred.user.uid, at: serverTimestamp() });
-    await b.commit();
-    settingUp = false; location.reload();
-  } catch (err) {
-    console.error(err); settingUp = false;
-    m.className = "msg err";
-    m.textContent = err.code === "auth/email-already-in-use" ? "Cet email a déjà un compte : connectez-vous."
-      : err.code === "auth/operation-not-allowed" ? "La connexion par email n'est pas encore activée dans Firebase (Authentication → Méthode de connexion)."
-      : err.code === "permission-denied" ? "Le compte administrateur a déjà été créé, ou les règles Firestore ne sont pas publiées."
-      : "Création impossible : " + (err.code || "erreur");
-    if (auth.currentUser) await signOut(auth).catch(() => {});
-  }
-});
-$("#logout").addEventListener("click", () => signOut(auth));
 
 /* ---------- Données temps réel ---------- */
 function listen() {
@@ -100,6 +105,7 @@ function listen() {
   }, err => console.error(err)));
   unsubs.push(onSnapshot(collection(db, "visites"), s => { VIS = s.docs.map(d => d.data()); renderDash(); }, err => console.error(err)));
   unsubs.push(onSnapshot(collection(db, "staff"), s => { STAFF = s.docs.map(d => ({ id: d.id, ...d.data() })); renderTeam(); }, () => {}));
+  if (me.role === "admin") unsubs.push(onSnapshot(collection(db, "invitations"), s => { INV = s.docs.map(d => ({ id: d.id, ...d.data() })); renderTeam(); }, () => {}));
 }
 function renderAll() { renderDash(); renderIns(); if (openId) openDetail(openId); $("#badgeNew").textContent = INS.filter(i => i.statut === "nouveau").length || ""; }
 
@@ -288,30 +294,32 @@ function renderMsg() {
 }
 document.addEventListener("click", async e => { const id = e.target.dataset?.read; if (id) await updateDoc(doc(db, "messages", id), { lu: true }).catch(() => {}); });
 
+
 /* ---------- Équipe (admin) ---------- */
 function renderTeam() {
   if (me?.role !== "admin") return;
+  const role = r => r === "admin" ? "Admin général" : "Service client";
   $("#teamList").innerHTML = STAFF.map(s => `<div class="row" style="cursor:default"><div><span class="n">${esc(s.nom)}</span><small>${esc(s.email)}</small></div>
-    <div class="c2"><span class="pill ${s.role === "admin" ? "s-rdv_fixe" : "s-appele"}">${s.role === "admin" ? "Admin général" : "Service client"}</span></div>
+    <div class="c2"><span class="pill ${s.role === "admin" ? "s-rdv_fixe" : "s-appele"}">${role(s.role)}</span></div>
     <div class="c3"><span class="pill ${s.actif ? "s-dossier_ouvert" : "s-pas_interesse"}">${s.actif ? "Actif" : "Désactivé"}</span></div>
-    <div>${s.id === me.uid ? "<small>Vous</small>" : `<button class="btn" data-toggle="${s.id}" data-actif="${s.actif}">${s.actif ? "Désactiver" : "Réactiver"}</button>`}</div></div>`).join("");
+    <div>${s.id === me.uid ? "<small>Vous</small>" : `<button class="btn" data-toggle="${s.id}" data-actif="${s.actif}">${s.actif ? "Désactiver" : "Réactiver"}</button>`}</div></div>`).join("")
+  + INV.map(v => `<div class="row" style="cursor:default"><div><span class="n">${esc(v.nom)}</span><small>${esc(v.email)}</small></div>
+    <div class="c2"><span class="pill ${v.role === "admin" ? "s-rdv_fixe" : "s-appele"}">${role(v.role)}</span></div>
+    <div class="c3"><span class="pill s-nouveau">Invitation en attente</span></div>
+    <div><button class="btn danger" data-uninvite="${esc(v.id)}">Annuler</button></div></div>`).join("");
 }
 document.addEventListener("click", async e => {
-  const id = e.target.dataset?.toggle; if (!id) return;
-  await updateDoc(doc(db, "staff", id), { actif: e.target.dataset.actif !== "true" }).catch(() => alert("Action impossible."));
+  const id = e.target.dataset?.toggle;
+  if (id) await updateDoc(doc(db, "staff", id), { actif: e.target.dataset.actif !== "true" }).catch(() => alert("Action impossible."));
+  const inv = e.target.dataset?.uninvite;
+  if (inv && confirm("Annuler cette invitation ?")) await deleteDoc(doc(db, "invitations", inv)).catch(() => alert("Action impossible."));
 });
 $("#teamForm").addEventListener("submit", async e => {
-  e.preventDefault(); const f = e.target, m = $("#teamMsg");
-  m.textContent = "Création du compte…"; m.className = "msg";
-  const sec = initializeApp(firebaseConfig, "sec-" + Date.now()), secAuth = getAuth(sec);
+  e.preventDefault(); const f = e.target, m = $("#teamMsg"), email = f.email.value.trim().toLowerCase();
+  if (STAFF.some(s => (s.email || "").toLowerCase() === email)) { m.textContent = "Cette personne a déjà un accès."; m.className = "msg err"; return; }
   try {
-    const cred = await createUserWithEmailAndPassword(secAuth, f.email.value.trim(), f.password.value);
-    await setDoc(doc(db, "staff", cred.user.uid), { nom: f.nom.value.trim(), email: f.email.value.trim(), role: f.role.value, actif: true, createdAt: serverTimestamp() });
-    await signOut(secAuth);
-    m.textContent = `Compte créé. Transmettez l'email et le mot de passe provisoire à ${f.nom.value.trim()}.`; m.className = "msg ok"; f.reset();
-  } catch (err) {
-    console.error(err);
-    m.textContent = err.code === "auth/email-already-in-use" ? "Cet email a déjà un compte." : "Création impossible : " + (err.code || "erreur");
-    m.className = "msg err";
-  }
+    await setDoc(doc(db, "invitations", email), { nom: f.nom.value.trim(), email, role: f.role.value, createdAt: serverTimestamp(), by: me.uid });
+    m.textContent = `Invitation enregistrée. ${f.nom.value.trim()} n'a plus qu'à ouvrir bigbluafrica.com/admin et cliquer « Se connecter avec Google » avec ${email}.`;
+    m.className = "msg ok"; f.reset();
+  } catch (err) { console.error(err); m.textContent = "Invitation impossible."; m.className = "msg err"; }
 });

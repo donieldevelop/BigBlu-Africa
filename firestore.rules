@@ -20,6 +20,24 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/config/setup)
         && existsAfter(/databases/$(database)/documents/config/setup)
         && request.resource.data.role == 'admin' && request.resource.data.actif == true;
+      // Invitation : la personne invitée (même adresse Google, vérifiée) active son propre accès.
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/invitations/$(request.auth.token.email.lower()))
+        && request.resource.data.keys().hasOnly(['nom','email','role','actif','createdAt'])
+        && request.resource.data.role == get(/databases/$(database)/documents/invitations/$(request.auth.token.email.lower())).data.role
+        && request.resource.data.actif == true;
+    }
+
+    // ---- Invitations du personnel (connexion Google) ----
+    match /invitations/{email} {
+      allow read: if isStaff()
+        || (request.auth != null && request.auth.token.email_verified == true && request.auth.token.email.lower() == email);
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['nom','email','role','createdAt','by'])
+        && request.resource.data.role in ['admin', 'service_client']
+        && request.resource.data.email == email;
+      allow delete: if isAdmin() || (request.auth != null && request.auth.token.email.lower() == email);
     }
 
     match /config/setup {
