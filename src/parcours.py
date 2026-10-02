@@ -80,8 +80,7 @@ def parcours(p):
        <p class="p-intro">Remplissez ce formulaire : un conseiller vous appellera selon vos disponibilités pour fixer votre rendez-vous au bureau.</p>
        <h3 class="p-sub">Vos informations</h3>
        <div class="v-grid">
-        <label>Nom *<input name="nom" required maxlength="80" autocomplete="family-name"></label>
-        <label>Prénoms *<input name="prenoms" required maxlength="120" autocomplete="given-name"></label>
+        <label class="full">Nom complet *<input name="nom" required maxlength="150" autocomplete="name" placeholder="Nom et prénoms"></label>
         <label>Téléphone (WhatsApp) *<input type="tel" name="telephone" required minlength="8" maxlength="25" placeholder="Ex. 07 00 00 00 00" autocomplete="tel"></label>
         <label class="full">Avez-vous un passeport valide ? *<select name="passeport" required><option value="">Choisir</option><option>Oui</option><option>Non</option><option>En cours d'établissement</option></select></label>
         {SPECIFIQUE[p]}
@@ -114,8 +113,7 @@ def parcours(p):
        <h2>Pas de souci, on reste en contact !</h2>
        <p class="p-intro">Laissez vos coordonnées : un conseiller vous recontactera au moment qui vous convient pour lancer votre dossier.</p>
        <div class="v-grid">
-        <label>Nom *<input name="nom" required maxlength="80"></label>
-        <label>Prénoms *<input name="prenoms" required maxlength="120"></label>
+        <label class="full">Nom complet *<input name="nom" required maxlength="150" autocomplete="name" placeholder="Nom et prénoms"></label>
         <label>Téléphone (WhatsApp) *<input type="tel" name="telephone" required minlength="8" maxlength="25" placeholder="Ex. 07 00 00 00 00"></label>
         <label>Quand pensez-vous être prêt(e) ? *<select name="quandPret" required><option value="">Choisir</option><option>Dans 2 semaines</option><option>Dans 1 mois</option><option>Dans 3 mois</option><option>Je ne sais pas encore</option></select></label>
        </div>
@@ -130,7 +128,7 @@ def parcours(p):
        <h2>Merci de votre intérêt pour VISION@FRICA.</h2>
        <p class="p-intro">Ce programme ne vous convient pas ? D'autres opportunités arrivent bientôt. Laissez votre numéro si vous souhaitez en être informé(e) — c'est facultatif.</p>
        <div class="v-grid">
-        <label>Nom<input name="nom" maxlength="80"></label>
+        <label>Nom complet<input name="nom" maxlength="150" autocomplete="name"></label>
         <label>Téléphone (WhatsApp)<input type="tel" name="telephone" minlength="8" maxlength="25" placeholder="Ex. 07 00 00 00 00"></label>
        </div>
        <input class="hp" name="site_web" tabindex="-1" autocomplete="off" aria-hidden="true">
