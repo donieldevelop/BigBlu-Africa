@@ -1,23 +1,34 @@
 # Fragments des parcours Albanie (utilisés par build.py)
 AVANTAGES = {
- "travail": ("💼","Poste disponible en Albanie","Ouvrier en usine",
-   [("📄","Contrat d'un an renouvelable"),("🏠","Hébergement pris en charge"),("🍽️","Nourriture prise en charge"),
-    ("🚌","Transport pris en charge"),("🏥","Assurance maladie"),("💶","Salaire à partir de <strong>600 €/mois</strong>")],
-   "Ce poste vous intéresse-t-il ?","Oui, ce poste m'intéresse"),
+ "travail": ("💼","Opportunité en Albanie","Travail en Albanie",
+   [("✅","<strong>Offre déjà disponible :</strong> le contrat peut être obtenu rapidement, selon les disponibilités."),
+    ("🔎","<strong>Offre non encore disponible :</strong> nous lançons la recherche d'une opportunité correspondant à votre profil."),
+    ("🏠","Hébergement, restauration, transport, assurance maladie… : les conditions d'accompagnement varient selon l'offre et le contrat obtenu.")],
+   "Cette opportunité vous intéresse-t-elle ?","Oui, cela m'intéresse"),
  "football": ("⚽","Centre de formation en Albanie","Football en Albanie",
-   [("🏠","Hébergement et nourriture pris en charge"),("⚽","Formation et progression footballistique"),
-    ("🌍","Possibilité d'être promu par le centre de formation auprès de clubs européens, selon votre niveau et vos performances")],
+   [("🏠","Le centre assure votre prise en charge selon les conditions prévues."),
+    ("⚽","Il vous accompagne dans votre progression sportive."),
+    ("🌍","Possibilité d'être promu auprès de clubs européens, selon votre niveau et vos performances.")],
    "Êtes-vous intéressé(e) par cette opportunité ?","Oui, je suis intéressé(e)"),
 }
+INTRO = {
+ "travail": "Vous souhaitez travailler en Albanie ? Ouvrez votre dossier auprès de <strong>VISION@FRICA</strong> : nous étudions votre profil et recherchons une opportunité professionnelle correspondant à votre domaine ou aux postes actuellement disponibles en Albanie.",
+ "football": "Vous souhaitez intégrer un centre de formation de football en Albanie ? Ouvrez votre dossier auprès de <strong>VISION@FRICA</strong> : nous étudions votre profil et engageons les démarches auprès du centre de formation.",
+}
+HONORAIRES = ("Honoraires","Jusqu'à 2 500 000 FCFA, négociables","Ils sont fixés selon la nature de l'offre. <strong>Le visa vous est remis une fois les honoraires réglés.</strong>")
 PROCEDURE = {
- "travail": [("Ouverture du dossier","50 000 FCFA","Nous ouvrons votre dossier et faisons la demande de votre contrat de travail."),
-             ("Obtention du contrat de travail","","Une fois votre contrat de travail obtenu, nous passons à la procédure de visa."),
-             ("Procédure de visa","150 000 FCFA","Le délai de traitement du visa est de 45 jours au plus."),
-             ("Après l'obtention du visa","Honoraires : 2 500 000 FCFA","Une fois votre visa obtenu, vous procédez au règlement de nos honoraires.")],
- "football": [("Ouverture du dossier","50 000 FCFA","Nous ouvrons votre dossier et lançons les démarches auprès du centre de formation."),
-             ("Lettre du centre de formation","","Après réception de la lettre officielle du centre de formation, nous poursuivons la procédure."),
-             ("Demande de visa","150 000 FCFA","Nous lançons la procédure d'obtention du visa. Délai de traitement : 45 jours au plus."),
-             ("Après l'obtention du visa","Honoraires : 2 500 000 FCFA","Une fois le visa obtenu, vous procédez au règlement de nos honoraires.")],
+ "travail": [("Ouverture du dossier","50 000 FCFA","Nous étudions votre profil et lançons la recherche d'un contrat correspondant à votre domaine ou aux postes disponibles."),
+             ("Obtention du contrat de travail","","Si une offre est déjà disponible, le contrat peut être obtenu rapidement. Sinon, la recherche peut prendre de quelques jours à environ un mois. Une fois le contrat obtenu, nous passons au visa."),
+             ("Demande de visa","150 000 FCFA","Le délai de traitement du visa est de 45 jours au plus."),
+             HONORAIRES],
+ "football": [("Ouverture du dossier","50 000 FCFA","Nous étudions votre profil et engageons les démarches auprès du centre de formation."),
+             ("Validation par le centre de formation","","Après validation de votre dossier par le centre de formation, nous passons au visa."),
+             ("Demande de visa","150 000 FCFA","Le délai de traitement du visa est de 45 jours au plus."),
+             HONORAIRES],
+}
+GARANTIE = {
+ "travail": "si nous n'obtenons pas de contrat dans un délai d'un mois, vos 50 000 FCFA vous sont remboursés.",
+ "football": "si votre dossier n'est pas validé par le centre de formation dans un délai d'un mois, vos 50 000 FCFA vous sont remboursés.",
 }
 DOCS = {
  "travail": ["Passeport valide","Photo sur fond blanc","Visite médicale"],
@@ -32,7 +43,7 @@ SPECIFIQUE = {
 
 def parcours(p):
     ico, small, titre, avs, question, oui = AVANTAGES[p]
-    lis = "".join(f"<li><b>{e}</b>{t}</li>" for e, t in avs)
+    lis = "".join(f"<li><b>{e}</b><span>{t}</span></li>" for e, t in avs)
     steps = "".join(f'<li><span>{i+1}</span><div><h3>{t}</h3>{f"<p class=v-price>{prix}</p>" if prix else ""}<p>{d}</p></div></li>' for i, (t, prix, d) in enumerate(PROCEDURE[p]))
     docs = "".join(f"<li>{d}</li>" for d in DOCS[p])
     jours = "".join(f'<label class="chip"><input type="checkbox" name="joursAppel" value="{j}"><span>{j}</span></label>' for j in ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"])
@@ -46,7 +57,7 @@ def parcours(p):
    <div class="p-step" data-step="1">
      <div class="p-card {p}">
        <div class="v-prog-head"><span class="v-ico">{ico}</span><div><small>{small}</small><h2>{titre}</h2></div></div>
-       <p class="p-intro">Découvrez les avantages de ce programme :</p>
+       <p class="p-intro">{INTRO[p]}</p>
        <ul class="v-list">{lis}</ul>
        <p class="p-q">{question}</p>
      </div>
@@ -57,6 +68,11 @@ def parcours(p):
      <div class="p-card">
        <h2>La procédure à suivre</h2>
        <ol class="p-proc">{steps}</ol>
+       <div class="p-resume"><h3>📌 En résumé</h3><ul>
+         <li><b>50 000 FCFA</b> → Ouverture du dossier</li>
+         <li><b>150 000 FCFA</b> → Demande de visa</li>
+         <li><b>Après obtention du visa</b> → Honoraires, jusqu'à <b>2 500 000 FCFA négociables</b> (le visa est remis après règlement)</li></ul></div>
+       <div class="p-garantie">✅ <strong>Garantie :</strong> {GARANTIE[p]}</div>
        <p class="v-note">✈️ Billet d'avion : à la charge du client.</p>
        <p class="p-q">Êtes-vous prêt(e) à payer l'ouverture du dossier (50 000 FCFA) pour lancer la procédure ?</p>
      </div>

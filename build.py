@@ -64,7 +64,7 @@ page("voyage/index.html", "Voyage — Cap sur l'Albanie | VISION@FRICA", "Travai
      r("v-hero.html") + r("v-entree.html"), "/voyage", "voyages")
 page("contact.html", "Contact — BIGBLU AFRICA", "Contactez BIGBLU AFRICA ou soumettez votre projet.",
      head("CONTACT", "Parlons de votre projet.", "Écrivez-nous ou présentez votre projet à BIGBLU AFRICA.") + r("contact.html") + r("soumettre.html"), "/contact", "", FORMS)
-page("voyage/albanie/travail.html", "Travail en Albanie — VISION@FRICA", "Poste d'ouvrier en usine en Albanie : avantages, procédure, documents et inscription en ligne.",
+page("voyage/albanie/travail.html", "Travail en Albanie — VISION@FRICA", "Travail en Albanie avec VISION@FRICA : recherche de contrat, procédure, documents et inscription en ligne.",
      parcours("travail"), "/voyage", "voyages parcours", PARC)
 page("voyage/albanie/football.html", "Football en Albanie — VISION@FRICA", "Centre de formation de football en Albanie : avantages, procédure, documents et inscription en ligne.",
      parcours("football"), "/voyage", "voyages parcours", PARC)
