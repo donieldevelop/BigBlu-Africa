@@ -35,3 +35,13 @@
 .p-resume{margin:20px 0 14px;background:var(--soft);border-radius:12px;padding:14px 16px}.p-resume h3{margin:0 0 8px;font-size:15px;color:var(--navy)}
 .p-resume ul{margin:0;padding:0;list-style:none}.p-resume li{padding:6px 0;font-size:14.5px;border-bottom:1px dashed var(--line)}.p-resume li:last-child{border:0}.p-resume b{color:var(--navy)}
 .p-garantie{margin:14px 0;padding:14px 16px;border-radius:12px;background:#e6f7f0;border:1px solid #9fe1cb;color:#0f5e48;font-size:14.5px}
+
+.offres{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 10px}
+.offre{position:relative;cursor:pointer}.offre input{position:absolute;opacity:0;width:1px;height:1px;left:50%;top:50%}
+.offre span{display:flex;flex-direction:column;gap:2px;text-align:center;padding:16px 10px;border:2px solid var(--line);border-radius:12px;background:#fff;transition:.15s}
+.offre b{color:var(--navy);font-size:15px}.offre small{color:var(--muted);font-weight:700}
+.offre input:checked+span{border-color:var(--red);background:#fde8eb}.offre input:checked+span b{color:var(--red)}.offre input:focus-visible+span{outline:3px solid var(--cyan)}
+.p-hint{margin:0 0 14px;color:var(--red);font-weight:700;font-size:14px;text-align:center}
+.p-nav .btn:disabled{opacity:.45;cursor:not-allowed}
+.p-total{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:14.5px}
+@media(max-width:420px){.offres{grid-template-columns:1fr}}

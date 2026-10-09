@@ -5,6 +5,12 @@ const loadFb = () => fb ||= Promise.all([import("./firebase.js"), import(FS)]).t
 
 const root = document.querySelector(".parcours");
 const programme = root.dataset.programme;
+let offre = "";   // poste choisi (travail : usine ou hôtel)
+const nextBtn1 = root.querySelector('.p-step[data-step="1"] .p-next');
+root.querySelectorAll("input[name=offre]").forEach(r => r.addEventListener("change", () => {
+  offre = r.value; nextBtn1.disabled = false;
+  const h = root.querySelector(".p-hint"); if (h) h.hidden = true;
+}));
 const steps = [...root.querySelectorAll(".p-step")];
 const bar = document.querySelector(".p-bar span"), count = document.querySelector(".p-count");
 const params = new URLSearchParams(location.search);
@@ -38,7 +44,7 @@ const clean = v => (v || "").toString().trim().slice(0, 300);
 const base = () => ({
   programme, nom: "", prenoms: "", dateNaissance: "", sexe: "", nationalite: "", ville: "", telephone: "", email: "", passeport: "",
   metier: "", poste: "", licencePro: "", clubActuel: "", joursAppel: [], creneau: "", bureau: "", bureauDate: "", message: "",
-  parcours: "", pretPayer: false, quandPret: "", lien: location.pathname, source, statut: "nouveau"
+  offre, parcours: "", pretPayer: false, quandPret: "", lien: location.pathname, source, statut: "nouveau"
 });
 async function save(data, form) {
   const msg = form.querySelector(".message"), btn = form.querySelector("button[type=submit]"), label = btn.textContent;

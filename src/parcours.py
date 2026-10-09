@@ -1,34 +1,39 @@
 # Fragments des parcours Albanie (utilisés par build.py)
 AVANTAGES = {
- "travail": ("💼","Opportunité en Albanie","Travail en Albanie",
-   [("✅","<strong>Offre déjà disponible :</strong> le contrat peut être obtenu rapidement, selon les disponibilités."),
-    ("🔎","<strong>Offre non encore disponible :</strong> nous lançons la recherche d'une opportunité correspondant à votre profil."),
-    ("🏠","Hébergement, restauration, transport, assurance maladie… : les conditions d'accompagnement varient selon l'offre et le contrat obtenu.")],
-   "Cette opportunité vous intéresse-t-elle ?","Oui, cela m'intéresse"),
+ "travail": ("💼","Opportunités en Albanie","Travail en Albanie",
+   [("💶","Salaire : <strong>800 € net par mois</strong>"),
+    ("🏠","Hébergement pris en charge"),
+    ("🍽️","Nourriture prise en charge"),
+    ("🚌","Transport pris en charge"),
+    ("🏥","Assurance maladie")],
+   "Ce poste vous intéresse-t-il ?","Oui, ce poste m'intéresse"),
  "football": ("⚽","Centre de formation en Albanie","Football en Albanie",
-   [("🏠","Le centre assure votre prise en charge selon les conditions prévues."),
-    ("⚽","Il vous accompagne dans votre progression sportive."),
-    ("🌍","Possibilité d'être promu auprès de clubs européens, selon votre niveau et vos performances.")],
+   [("🏠","Hébergement et nourriture pris en charge"),
+    ("⚽","Formation et progression footballistique"),
+    ("🌍","Possibilité d'être promu par le centre de formation auprès de clubs européens, selon votre niveau et vos performances")],
    "Êtes-vous intéressé(e) par cette opportunité ?","Oui, je suis intéressé(e)"),
 }
 INTRO = {
- "travail": "Vous souhaitez travailler en Albanie ? Ouvrez votre dossier auprès de <strong>VISION@FRICA</strong> : nous étudions votre profil et recherchons une opportunité professionnelle correspondant à votre domaine ou aux postes actuellement disponibles en Albanie.",
- "football": "Vous souhaitez intégrer un centre de formation de football en Albanie ? Ouvrez votre dossier auprès de <strong>VISION@FRICA</strong> : nous étudions votre profil et engageons les démarches auprès du centre de formation.",
+ "travail": "Deux postes sont actuellement disponibles en Albanie avec <strong>VISION@FRICA</strong>. Choisissez celui qui vous intéresse :",
+ "football": "Intégrez un <strong>centre de formation de football en Albanie</strong> avec <strong>VISION@FRICA</strong> et bénéficiez de :",
 }
-HONORAIRES = ("Honoraires","Jusqu'à 2 500 000 FCFA, négociables","Ils sont fixés selon la nature de l'offre. <strong>Le visa vous est remis une fois les honoraires réglés.</strong>")
+OFFRES = {
+ "travail": """<div class="offres">
+         <label class="offre"><input type="radio" name="offre" value="usine"><span><b>🏭 Ouvrier en usine</b><small>Factory</small></span></label>
+         <label class="offre"><input type="radio" name="offre" value="hotel"><span><b>🏨 Hôtellerie</b><small>Travail en hôtel</small></span></label>
+       </div>
+       <p class="p-hint">👆 Choisissez un poste pour continuer.</p>
+       <p class="p-intro">Pour les deux postes :</p>""",
+}
+def _proc(depart):
+    return [("Ouverture du dossier","200 000 FCFA","Inscription et ouverture de votre dossier, <strong>procédure de visa incluse</strong>. Ces frais ne sont pas remboursables."),
+            ("Dépôt en séquestre","1 500 000 FCFA","Vous déposez cette somme <strong>chez votre notaire, en compte séquestre</strong>. L'argent n'est versé à personne : il reste bloqué chez le notaire et montre que vous êtes solvable. Il n'est libéré qu'à l'obtention de votre visa ; sans visa, il vous est rendu. Dès le dépôt, nous lançons la procédure de visa."),
+            ("Obtention du visa","","Votre visa est obtenu en <strong>un mois maximum</strong>."),
+            ("Solde des honoraires","1 000 000 FCFA","À l'obtention du visa, vous réglez le solde. <strong>Le visa vous est remis une fois le solde payé.</strong>"),
+            ("Départ","",depart)]
 PROCEDURE = {
- "travail": [("Ouverture du dossier","50 000 FCFA","Nous étudions votre profil et lançons la recherche d'un contrat correspondant à votre domaine ou aux postes disponibles."),
-             ("Obtention du contrat de travail","","Si une offre est déjà disponible, le contrat peut être obtenu rapidement. Sinon, la recherche peut prendre de quelques jours à environ un mois. Une fois le contrat obtenu, nous passons au visa."),
-             ("Demande de visa","150 000 FCFA","Le délai de traitement du visa est de 45 jours au plus."),
-             HONORAIRES],
- "football": [("Ouverture du dossier","50 000 FCFA","Nous étudions votre profil et engageons les démarches auprès du centre de formation."),
-             ("Validation par le centre de formation","","Après validation de votre dossier par le centre de formation, nous passons au visa."),
-             ("Demande de visa","150 000 FCFA","Le délai de traitement du visa est de 45 jours au plus."),
-             HONORAIRES],
-}
-GARANTIE = {
- "travail": "si nous n'obtenons pas de contrat dans un délai d'un mois, vos 50 000 FCFA vous sont remboursés.",
- "football": "si votre dossier n'est pas validé par le centre de formation dans un délai d'un mois, vos 50 000 FCFA vous sont remboursés.",
+ "travail": _proc("Vous partez en Albanie : hébergement, nourriture, transport et assurance maladie pris en charge, et vous commencez votre travail."),
+ "football": _proc("Vous partez en Albanie : hébergement et nourriture pris en charge, et vous intégrez le centre de formation."),
 }
 DOCS = {
  "travail": ["Passeport valide","Photo sur fond blanc","Visite médicale"],
@@ -45,6 +50,7 @@ def parcours(p):
     ico, small, titre, avs, question, oui = AVANTAGES[p]
     lis = "".join(f"<li><b>{e}</b><span>{t}</span></li>" for e, t in avs)
     steps = "".join(f'<li><span>{i+1}</span><div><h3>{t}</h3>{f"<p class=v-price>{prix}</p>" if prix else ""}<p>{d}</p></div></li>' for i, (t, prix, d) in enumerate(PROCEDURE[p]))
+    NEED = ' disabled data-need="offre"' if p == "travail" else ""
     docs = "".join(f"<li>{d}</li>" for d in DOCS[p])
     jours = "".join(f'<label class="chip"><input type="checkbox" name="joursAppel" value="{j}"><span>{j}</span></label>' for j in ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"])
     return f'''
@@ -58,10 +64,11 @@ def parcours(p):
      <div class="p-card {p}">
        <div class="v-prog-head"><span class="v-ico">{ico}</span><div><small>{small}</small><h2>{titre}</h2></div></div>
        <p class="p-intro">{INTRO[p]}</p>
+       {OFFRES.get(p, "")}
        <ul class="v-list">{lis}</ul>
        <p class="p-q">{question}</p>
      </div>
-     <div class="p-nav"><button class="btn p-back p-go" data-go="non" type="button">Non, merci</button><button class="btn v-red p-next" type="button">{oui} →</button></div>
+     <div class="p-nav"><button class="btn p-back p-go" data-go="non" type="button">Non, merci</button><button class="btn v-red p-next" type="button"{NEED}>{oui} →</button></div>
    </div>
 
    <div class="p-step" data-step="2" hidden>
@@ -69,12 +76,12 @@ def parcours(p):
        <h2>La procédure à suivre</h2>
        <ol class="p-proc">{steps}</ol>
        <div class="p-resume"><h3>📌 En résumé</h3><ul>
-         <li><b>50 000 FCFA</b> → Ouverture du dossier</li>
-         <li><b>150 000 FCFA</b> → Demande de visa</li>
-         <li><b>Après obtention du visa</b> → Honoraires, jusqu'à <b>2 500 000 FCFA négociables</b> (le visa est remis après règlement)</li></ul></div>
-       <div class="p-garantie">✅ <strong>Garantie :</strong> {GARANTIE[p]}</div>
+         <li><b>200 000 FCFA</b> → Ouverture du dossier (procédure de visa incluse)</li>
+         <li><b>1 500 000 FCFA</b> → Séquestre chez votre notaire, avant le lancement du visa</li>
+         <li><b>1 000 000 FCFA</b> → Solde, à l'obtention du visa</li></ul>
+         <p class="p-total">Honoraires totaux : <strong>2 500 000 FCFA</strong>, négociables dans certains cas.</p></div>
        <p class="v-note">✈️ Billet d'avion : à la charge du client.</p>
-       <p class="p-q">Êtes-vous prêt(e) à payer l'ouverture du dossier (50 000 FCFA) pour lancer la procédure ?</p>
+       <p class="p-q">Êtes-vous prêt(e) à payer l'ouverture du dossier (200 000 FCFA) pour lancer la procédure ?</p>
      </div>
      <div class="p-nav p-nav3"><button class="btn p-back" type="button">← Retour</button><button class="btn p-back p-go" data-go="plus_tard" type="button">Pas pour le moment</button><button class="btn v-red p-next" type="button">Oui, je suis prêt(e) →</button></div>
    </div>

@@ -60,3 +60,7 @@ input,select,textarea{font:inherit;padding:10px 12px;border:1px solid #cfdbe6;bo
 .gbtn:hover{background:#f6f9fc}
 .setup-box{margin-top:6px;padding:14px;border-radius:10px;background:#fff7e6;border:1px solid #f5d38a;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#6b4e00}
 .setup-box strong{color:#6b4e00}.copy-hint{margin:8px 0 0;font-size:12.5px;color:var(--muted)}
+
+.s-sequestre_depose{background:#e0eefb;color:#0b5fa5}.s-solde_paye{background:#0e6b50;color:#fff}
+.wa-h{margin:26px 0 10px;color:var(--navy);font-size:17px}.wa-card h3{margin:0 0 8px;font-size:14.5px;color:var(--navy)}
+.wa-card pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:13.5px;line-height:1.5;background:var(--soft);border-radius:8px;padding:12px;margin:0 0 12px;max-height:360px;overflow:auto}

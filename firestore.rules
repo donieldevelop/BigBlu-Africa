@@ -56,8 +56,9 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
             'programme','nom','prenoms','dateNaissance','sexe','nationalite','ville','telephone','email',
             'passeport','metier','poste','licencePro','clubActuel','joursAppel','creneau','bureau','bureauDate',
-            'message','parcours','pretPayer','quandPret','lien','source','statut','createdAt'])
+            'message','offre','parcours','pretPayer','quandPret','lien','source','statut','createdAt'])
         && request.resource.data.programme in ['travail', 'football']
+        && request.resource.data.offre in ['', 'usine', 'hotel']
         && request.resource.data.nom is string && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 300
         && request.resource.data.telephone is string && request.resource.data.telephone.size() >= 8 && request.resource.data.telephone.size() <= 300
         && request.resource.data.joursAppel is list && request.resource.data.joursAppel.size() <= 7

@@ -29,6 +29,7 @@
     <nav class="tabs">
       <button data-tab="dash" class="on">📊 Tableau de bord</button>
       <button data-tab="ins">🧾 Inscriptions <b id="badgeNew"></b></button>
+      <button data-tab="wa">💬 Messages WhatsApp</button>
       <button data-tab="msg">✉️ Messages <b id="badgeMsg"></b></button>
       <button data-tab="team" class="admin-only">👥 Équipe</button>
     </nav>
@@ -75,6 +76,13 @@
     <section data-view="msg" hidden>
       <div class="head"><h1>Messages & projets</h1></div>
       <div class="list" id="msgList"></div>
+    </section>
+
+    <!-- MESSAGES WHATSAPP -->
+    <section data-view="wa" hidden>
+      <div class="head"><h1>Messages WhatsApp</h1></div>
+      <p class="copy-hint">Réponses prêtes à copier-coller, selon l'étape de la conversation. Remplacez les [crochets] par les informations de la personne.</p>
+      <div id="waList"></div>
     </section>
 
     <!-- EQUIPE -->

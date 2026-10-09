@@ -1,4 +1,5 @@
 import { app, db } from "./firebase.js";
+import { WA } from "./wa-scripts.js";
 import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { collection, query, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, serverTimestamp, writeBatch }
@@ -10,10 +11,11 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 
 const STATUTS = [
   ["nouveau", "Nouveau"], ["a_rappeler", "À rappeler"], ["appele", "Appelé"], ["rdv_fixe", "RDV fixé"],
-  ["dossier_ouvert", "Dossier ouvert"], ["visa_en_cours", "Visa en cours"], ["visa_obtenu", "Visa obtenu"], ["plus_tard", "Prospect plus tard"], ["pas_interesse", "Pas intéressé"]
+  ["dossier_ouvert", "Dossier ouvert"], ["sequestre_depose", "Séquestre déposé"], ["visa_en_cours", "Visa en cours"], ["visa_obtenu", "Visa obtenu"], ["solde_paye", "Solde payé"], ["plus_tard", "Prospect plus tard"], ["pas_interesse", "Pas intéressé"]
 ];
 const SL = Object.fromEntries(STATUTS);
-const FUNNEL = ["nouveau", "a_rappeler", "appele", "rdv_fixe", "dossier_ouvert", "visa_en_cours", "visa_obtenu"];
+const FUNNEL = ["nouveau", "a_rappeler", "appele", "rdv_fixe", "dossier_ouvert", "sequestre_depose", "visa_en_cours", "visa_obtenu", "solde_paye"];
+const OFFRES = { usine: "🏭 Ouvrier en usine", hotel: "🏨 Hôtellerie" };
 const JOURS = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 
 let me = null, INS = [], MSG = [], STAFF = [], INV = [], VIS = [], unsubs = [], officeWeek = 0, openId = null;
@@ -140,7 +142,7 @@ function renderDash() {
   const rdvWeek = INS.filter(i => i.rdvDate && new Date(i.rdvDate) >= wk0 && new Date(i.rdvDate) < wk1).length;
   const k = [["Prêts (inscription complète)", L.filter(i => (i.parcours || "complet") === "complet").length, true], ["Prospects plus tard", L.filter(i => i.parcours === "plus_tard").length],
     ["À appeler aujourd'hui", INS.filter(toCallToday).length], ["RDV cette semaine", rdvWeek],
-    ["Dossiers ouverts", L.filter(i => FUNNEL.indexOf(i.statut) >= 4).length], ["Visas obtenus", cnt("visa_obtenu")]];
+    ["Dossiers ouverts", L.filter(i => FUNNEL.indexOf(i.statut) >= 4).length], ["Visas obtenus", L.filter(i => FUNNEL.indexOf(i.statut) >= FUNNEL.indexOf("visa_obtenu")).length]];
   $("#kpis").innerHTML = k.map(([l, v, h]) => `<div class="kpi${h ? " hl" : ""}"><small>${l}</small><strong>${v}</strong></div>`).join("");
 
   $("#todayLbl").textContent = todayName();
@@ -156,12 +158,13 @@ function renderDash() {
   $("#chartDays").innerHTML = arr.map(([d, v], ix) => `<div class="bar" title="${fmt(d)} : ${v}">${v ? `<em>${v}</em>` : ""}<i style="height:${v / max * 100}%"></i><span>${ix % every === 0 ? d.getDate() + "/" + (d.getMonth() + 1) : ""}</span></div>`).join("");
 
   const reached = s => L.filter(i => FUNNEL.indexOf(i.statut) >= FUNNEL.indexOf(s)).length, tot = Math.max(1, L.length);
-  const colors = ["#8a5a00", "#a4440c", "#0b67a8", "#5b3fb8", "#0f6e56", "#0b7390", "#1d9e75"];
+  const colors = ["#8a5a00", "#a4440c", "#0b67a8", "#5b3fb8", "#0f6e56", "#0b6fa0", "#0b7390", "#1d9e75", "#0e6b50"];
   $("#funnel").innerHTML = FUNNEL.map((s, ix) => { const v = reached(s); return `<div class="frow"><span>${SL[s]}</span><div class="track"><div class="fill" style="width:${v / tot * 100}%;background:${colors[ix]}"></div></div><b>${v}</b></div>`; }).join("")
     + `<div class="frow"><span>Pas intéressé</span><div class="track"><div class="fill" style="width:${cnt("pas_interesse") / tot * 100}%;background:#9aa8b5"></div></div><b>${cnt("pas_interesse")}</b></div>`;
 
   const tr = L.filter(i => i.programme === "travail").length, fo = L.length - tr;
   const pv = L.filter(i => i.passeport === "Oui").length, pc = L.filter(i => (i.passeport || "").startsWith("En cours")).length;
+  const nUsine = L.filter(i => i.offre === "usine").length, nHotel = L.filter(i => i.offre === "hotel").length;
   const postes = {}; L.filter(i => i.poste).forEach(i => postes[i.poste] = (postes[i.poste] || 0) + 1);
   const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
   $("#profile").innerHTML = `
@@ -169,6 +172,7 @@ function renderDash() {
     <div class="legend"><span><i style="background:var(--red)"></i>Travail : ${tr}</span><span><i style="background:var(--navy)"></i>Football : ${fo}</span></div>
     <b>Passeport</b><div class="split-bar">${pv ? `<div style="flex:${pv};background:var(--green)">${pct(pv, L.length)}%</div>` : ""}${pc ? `<div style="flex:${pc};background:#e0a800">${pct(pc, L.length)}%</div>` : ""}${L.length - pv - pc ? `<div style="flex:${L.length - pv - pc};background:#9aa8b5">${pct(L.length - pv - pc, L.length)}%</div>` : ""}${!L.length ? `<div style="flex:1;background:#dfe8ef;color:var(--muted)">—</div>` : ""}</div>
     <div class="legend"><span><i style="background:var(--green)"></i>Valide : ${pv}</span><span><i style="background:#e0a800"></i>En cours : ${pc}</span><span><i style="background:#9aa8b5"></i>Non : ${L.length - pv - pc}</span></div>
+    <b>Offres de travail</b><div class="legend" style="margin:6px 0 14px"><span>🏭 Usine : <b>${nUsine}</b></span><span>🏨 Hôtellerie : <b>${nHotel}</b></span></div>
     <b>Postes (football)</b><div class="legend" style="margin-top:6px">${Object.entries(postes).map(([p, v]) => `<span>${esc(p)} : <b>${v}</b></span>`).join("") || "<span>—</span>"}</div>`;
 }
 function renderVisites() {
@@ -214,7 +218,7 @@ function renderIns() {
   $("#insCount").textContent = `${L.length} inscription${L.length > 1 ? "s" : ""}`;
   $("#insList").innerHTML = L.map(i => `<div class="row" data-id="${i.id}">
     <div><span class="n">${esc(i.prenoms)} ${esc(i.nom)}</span><small>${esc(i.telephone)} · ${esc(i.ville)}</small></div>
-    <div class="c2"><span class="pill p-${i.programme}">${i.programme === "travail" ? "💼 Travail" : "⚽ Football"}</span><small>Passeport : ${esc(i.passeport)}</small></div>
+    <div class="c2"><span class="pill p-${i.programme}">${i.programme === "travail" ? "💼 Travail" : "⚽ Football"}</span><small>Passeport : ${esc(i.passeport)}${i.offre ? " · " + OFFRES[i.offre] : ""}</small></div>
     <div class="c3"><small>📞 ${esc((i.joursAppel || []).map(j => j.slice(0, 3)).join(", "))}</small><small>${esc(i.creneau)}</small></div>
     <div><span class="pill s-${i.statut}">${SL[i.statut] || i.statut}</span><small>${fmt(toDate(i.createdAt))}</small></div></div>`).join("") || `<p class="empty">Aucune inscription.</p>`;
 }
@@ -230,8 +234,9 @@ function openDetail(id) {
     ["Né(e) le", i.dateNaissance], ["Sexe", i.sexe], ["Nationalité", i.nationalite], ["Ville", i.ville], ["Passeport valide", i.passeport],
     ...(i.programme === "travail" ? [["Métier", i.metier || "—"]] : [["Poste", i.poste], ["Licence pro", i.licencePro], ["Club", i.clubActuel || "—"]]),
     ["Jours d'appel", (i.joursAppel || []).join(", ")], ["Créneau", i.creneau], ["Bureau", i.bureau + (i.bureauDate ? " (" + fmt(new Date(i.bureauDate)) + ")" : "")],
+    ...(i.offre ? [["Poste de travail", OFFRES[i.offre]]] : []),
     ["Parcours", { complet: "Inscription complète", plus_tard: "Pas pour le moment", non: "Non intéressé" }[i.parcours || "complet"]],
-    ["Prêt à payer 50 000 F", i.pretPayer === false ? "Non" : "Oui"], ...(i.quandPret ? [["Prêt(e)", i.quandPret]] : []),
+    ["Prêt à payer 200 000 F", i.pretPayer === false ? "Non" : "Oui"], ...(i.quandPret ? [["Prêt(e)", i.quandPret]] : []),
     ["Message", i.message || "—"], ["Inscrit le", fmtH(toDate(i.createdAt))], ["Source", `${i.source || "—"} · ${i.lien || ""}`]];
   const notes = [...(i.notes || [])].reverse();
   $("#drawerPanel").innerHTML = `
@@ -267,7 +272,7 @@ function openDetail(id) {
 /* ---------- Export Excel (admin) ---------- */
 $("#export").addEventListener("click", async () => {
   const L = filtered().map(i => ({
-    "Date": fmtH(toDate(i.createdAt)), "Programme": i.programme, "Parcours": i.parcours || "complet", "Prêt à payer": i.pretPayer === false ? "Non" : "Oui", "Quand prêt": i.quandPret || "", "Statut": SL[i.statut], "Nom": i.nom, "Prénoms": i.prenoms,
+    "Date": fmtH(toDate(i.createdAt)), "Programme": i.programme, "Offre": i.offre || "", "Parcours": i.parcours || "complet", "Prêt à payer": i.pretPayer === false ? "Non" : "Oui", "Quand prêt": i.quandPret || "", "Statut": SL[i.statut], "Nom": i.nom, "Prénoms": i.prenoms,
     "Téléphone": i.telephone, "Email": i.email, "Né(e) le": i.dateNaissance, "Sexe": i.sexe, "Nationalité": i.nationalite, "Ville": i.ville,
     "Passeport": i.passeport, "Métier": i.metier, "Poste": i.poste, "Licence pro": i.licencePro, "Club": i.clubActuel,
     "Jours d'appel": (i.joursAppel || []).join(", "), "Créneau": i.creneau, "Bureau": i.bureau, "Date bureau": i.bureauDate, "RDV": i.rdvDate || "",
@@ -323,3 +328,18 @@ $("#teamForm").addEventListener("submit", async e => {
     m.className = "msg ok"; f.reset();
   } catch (err) { console.error(err); m.textContent = "Invitation impossible."; m.className = "msg err"; }
 });
+
+
+/* ---------- Messages WhatsApp prêts à copier ---------- */
+function renderWA() {
+  $("#waList").innerHTML = WA.map(g => `<h2 class="wa-h">${esc(g.groupe)}</h2>` + g.items.map((m, ix) =>
+    `<div class="card wa-card"><h3>${esc(m.titre)}</h3><pre>${esc(m.texte)}</pre><button class="btn primary" data-copy="${g.id}|${ix}">📋 Copier</button></div>`).join("")).join("");
+}
+document.addEventListener("click", async e => {
+  const k = e.target.dataset?.copy; if (!k) return;
+  const [gid, ix] = k.split("|"), t = WA.find(x => x.id === gid).items[Number(ix)].texte;
+  try { await navigator.clipboard.writeText(t); }
+  catch { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  const b = e.target; b.textContent = "✅ Copié"; setTimeout(() => b.textContent = "📋 Copier", 1500);
+});
+renderWA();
